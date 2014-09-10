@@ -20,6 +20,7 @@ varying vec4 vAudio;
 varying vec3 vNorm;
 
 varying vec3 vCamPos;
+varying vec3 vCamVec;
 varying vec3 vMNorm;
 
 void main(){
@@ -50,6 +51,9 @@ void main(){
   vAudio = texture2D( t_audio , vec2( vUv.x , 0. ) );
 
   vPos = pos.xyz;
+  vLightDir = normalize( vMPos - vec3( 10. , 0. , 0. ) );
+
+  vCamVec = normalize( cameraPosition - vMPos);
   gl_Position = projectionMatrix * modelViewMatrix * vec4( pos.xyz , 1. );
 
 
