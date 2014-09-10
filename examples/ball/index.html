@@ -233,12 +233,33 @@
     var h = window.innerHeight;
   
 
+    var u = {
+
+      repelers:{ type:"v3v" , value:[]},
+
+    }
+
+    var g = new THREE.IcosahedronGeometry( 1 , 1 );
+    var m = new THREE.MeshNormalMaterial();
+
+    for( var i =0; i<25; i++ ){
+
+      var mesh = new THREE.Mesh( g , m );
+
+      mesh.position.x = ( Math.random() - .5 ) * 20;
+      mesh.position.y = ( Math.random() - .5 ) * 20;
+      mesh.position.z = ( Math.random() - .5 ) * 20;
+
+      scene.add( mesh );
+      u.repelers.value.push( mesh.position );
+
+    }
 
     var geo = new THREE.IcosahedronGeometry( 10 , 5 );
     var ss = shaders.simulationShaders.ball;
     var vs = shaders.vertexShaders.ball;
     var fs = shaders.fragmentShaders.ball;
-    ball = new Face( geo , ss , vs , fs );
+    ball = new Face( geo , ss , vs , fs , u);
 
     /*var wf = new THREE.Mesh( geo , new THREE.MeshBasicMaterial({
       wireframe: true,

@@ -1,10 +1,11 @@
-function Face( geometry , ss , vs , fs){
+function Face( geometry , ss , vs , fs , u ){
 
   this.ogGeometry = geometry;
  
-  this.ss = ss;
-  this.vs = vs;
-  this.fs = fs;
+  this.ss = ss; // simulation shader
+  this.vs = vs; // vertex  shader
+  this.fs = fs; // fragment shader
+  this.u  = u;  // uniforms
 
   this.size = Math.ceil( Math.sqrt( geometry.vertices.length ) );
  
@@ -16,6 +17,13 @@ function Face( geometry , ss , vs , fs){
   this.physics.setUniform( 'dT' , dT );
   this.physics.setUniform( 'timer' , timer );
   this.physics.setUniform( 't_og' , this.t_og );
+  
+  for( var propt in this.u ){
+
+    this.physics.setUniform( propt , this.u[propt] );
+   // console.log( propt );
+
+  }
 
   this.uniforms = {
 

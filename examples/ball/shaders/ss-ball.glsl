@@ -4,6 +4,8 @@ uniform sampler2D t_og;
 uniform float dT;
 uniform float timer;
 
+uniform vec3 repelers[ 25 ];
+
 varying vec2 vUv;
 
 
@@ -24,40 +26,35 @@ void main(){
   float life = pos.w;
   
   vec3 f = vec3( 0. , 0. , 0. );
-  life -= dT * 1.3; //* .1;//dT * (abs(sin( vUv.x * 1000. * cos( vUv.y * 500. )))+.3) ;
-
-  f += vec3( 0. , .5 , 0. );
  
-  vec3 curl = curlNoise( pos.xyz * .01 );
-  f+= curl* .5;
+  vec3 dif = pos.xyz - og.xyz;
 
-  vel += f;
-  vel *= .99;//dampening;
+  vec3 repel = pos.xyz - vec3( 1. , 0. , 0. );
 
-  if( length(vel) > 1. ){
+  for( int i = 0; i < 25; i++ ){
 
-    vel = normalize( vel ) * 1.;
+    vec3  rP = repelers[ i ];
+    vec3  rD = pos.xyz - rP;
+    float rL = length( rD );
+    vec3  rN = normalize( rD );
 
-  }
+    if( rL < 5. ){
+
+      f += rN;
+
+        //f -= rN;
 
 
-  if( life < 0. ){
+    }
 
-     p = texture2D( t_og , vUv ).xyz;
-     vel *= 0.;
-     
-     life = 2.;
-
-  }
-
-  if( life == 2. ){
-
-    vel *= 0.;
-    life == 1.;
 
   }
 
-  
+
+  f -= dif;
+ 
+  vel += f*dT;
+  vel *= .98;
   p += vel * 1.;//speed;*/
 
 
