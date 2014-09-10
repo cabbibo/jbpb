@@ -28,7 +28,7 @@ void main(){
 
   f += vec3( 0. , .5 , 0. );
  
-  vec3 curl = curlNoise( pos.xyz * .002 );
+  vec3 curl = curlNoise( pos.xyz * .02 );
   f+= curl* .5;
 
   vel += f;
@@ -43,7 +43,7 @@ void main(){
 
   if( life > 10. ){
 
-     p = texture2D( t_start , vUv ).xyz;
+     p = texture2D( t_og , vUv ).xyz;
      vel *= 0.;
      
      life = 0.;
@@ -61,6 +61,7 @@ void main(){
 
 
 
-  gl_FragColor = vec4( og.xyz + sin( timer ) * 1.* vec3( vUv.x , vUv.y , 0. ), 1.  );
+  //gl_FragColor = vec4( og.xyz + sin( timer ) * 1.* vec3( vUv.x , vUv.y , 0. ), 1.  );
+  gl_FragColor = vec4( p , life );
 
 }

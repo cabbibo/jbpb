@@ -1,24 +1,21 @@
-function Face(geometry){
+function Face( geometry , ss , vs , fs){
 
   this.ogGeometry = geometry;
-
-  var sim = shaders.simulationShaders.face;
+ 
+  this.ss = ss;
+  this.vs = vs;
+  this.fs = fs;
 
   this.size = Math.ceil( Math.sqrt( geometry.vertices.length ) );
  
   this.vertexUVs = this.createVertexUVs();
   this.t_og = this.createOGTexture();
 
-  this.physics = new PhysicsRenderer( this.size , sim , renderer );
+  this.physics = new PhysicsRenderer( this.size , this.ss , renderer );
 
   this.physics.setUniform( 'dT' , dT );
   this.physics.setUniform( 'timer' , timer );
   this.physics.setUniform( 't_og' , this.t_og );
-
-  this.physics.createDebugScene();
-  this.physics.addDebugScene( scene );
-  this.physics.debugScene.scale.multiplyScalar( .1 );
-  this.physics.debugScene.position.y = 20;
 
   this.uniforms = {
 
@@ -29,11 +26,20 @@ function Face(geometry){
 
   }
 
+  this.attributes = {
+
+    tri1:        { type: 'v3', value: null },
+    tri2:        { type: 'v3', value: null },
+
+  };
+  
+
   this.material = new THREE.ShaderMaterial({
 
     uniforms: this.uniforms,
-    vertexShader: shaders.vertexShaders.face,
-    fragmentShader: shaders.fragmentShaders.face,
+    attributes: this.attributes,
+    vertexShader: this.vs, 
+    fragmentShader: this.fs,
     transparent: true,
     //blending: THREE.AdditiveBlending,
    // depthWrite: false
@@ -168,9 +174,6 @@ Face.prototype.createGeometry = function(){
     var v3 = f[i].c;
     var a3 = this.vertexUVs[ v3 ]; 
 
-    console.log( v1 )
-    console.log( a1 );
-
     positions[ index + 0 ] = a1[0]; 
     positions[ index + 1 ] = a1[1]; 
     positions[ index + 2 ] = v1; 
@@ -219,5 +222,17 @@ Face.prototype.createGeometry = function(){
 Face.prototype.update = function(){
 
   this.physics.update();
+
+}
+
+Face.prototype.debug = function(scale , y){
+
+  var scale = scale || .1;
+  var y = y || 20;
+  this.physics.createDebugScene();
+  this.physics.addDebugScene( scene );
+  this.physics.debugScene.scale.multiplyScalar( scale );
+  this.physics.debugScene.position.y = y;
+
 
 }
