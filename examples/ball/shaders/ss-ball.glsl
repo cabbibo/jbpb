@@ -1,10 +1,13 @@
 uniform sampler2D t_oPos;
 uniform sampler2D t_pos;
 uniform sampler2D t_og;
+uniform sampler2D t_audio;
 uniform float dT;
 uniform float timer;
 
 uniform vec3 repelers[ 25 ];
+uniform vec3 velocities[ 25 ];
+uniform vec3 aPower[ 25 ];
 
 varying vec2 vUv;
 
@@ -35,17 +38,18 @@ void main(){
 
     vec3  rP = repelers[ i ];
     vec3  rD = pos.xyz - rP;
-    float rL = length( rD );
+    float rL = max( 1. , length( rD ) );
     vec3  rN = normalize( rD );
 
-    //if( rL < 5. ){
+    float p = aPower[i].x;
+    if( rL < p * p * p * 600.4 ){
 
-      f += 1.1 *  rN / rL;
+      f +=  10.  * p * rN / (rL);
 
         //f -= rN;
 
 
-   // }
+    }
 
 
   }

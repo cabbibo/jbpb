@@ -50,8 +50,9 @@ void main(){
 
   vAudio = texture2D( t_audio , vec2( vUv.x , 0. ) );
 
+  pos.xyz += vNorm * length(vAudio )* .0;//01;
   vPos = pos.xyz;
-  vLightDir = normalize( vMPos - vec3( 10. , 0. , 0. ) );
+  vLightDir = normalize( vMPos - vec3( 1000. , 0. , 0. ) );
 
   vCamVec = normalize( cameraPosition - vMPos);
   gl_Position = projectionMatrix * modelViewMatrix * vec4( pos.xyz , 1. );

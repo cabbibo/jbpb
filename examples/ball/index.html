@@ -20,7 +20,8 @@
 
     #stats{
       position  : absolute;
-     // bottom    : -35px;
+      bottom    : -35px;
+
       left      : 0px;
       z-index   : 999;
       opacity: .1;
@@ -68,11 +69,9 @@
 
    <div id="description">
 
-     <!--  
-     <a href="http://soundcloud.com/cabbibo" target="_blank">
-      Cabbibo - Polar Repress
+     <a href="https://soundcloud.com/gidgeofficial/gidge-i-fell-in-love" target="_blank">
+      Gidge - I Fell In Love
     </a>
-    -->
 
   </div>
 
@@ -104,6 +103,21 @@
 
   var sceneSize = 5;
 
+  var PARAMS = {
+
+    simulation:{
+      repulsionPower:{ type:"f" , value: 0 },
+    },
+    render:{
+
+      audioDisplace:{ type:"f" , value : 0 },
+      normalScale:{ type:"f" , value : 0 },
+      textureScale:{ type:"f" , value : 0 }
+
+    }
+
+  }
+
 
   var tv1 = new THREE.Vector3();
   var tv2 = new THREE.Vector3();
@@ -121,14 +135,14 @@
 
 
   var loaded = 0;
-  var neededToLoad = 4;
+  var neededToLoad = 1;
 
   var waterRender = { type:"f" ,value:0}
 
   var clock = new THREE.Clock();
 
   var audioController = new AudioController();
-  audioController.mute.gain.value = 0;
+  audioController.mute.gain.value = 1;
 
   var controller = new Leap.Controller();
   controller.connect();
@@ -136,41 +150,10 @@
   var camUniforms;
 
 
-  var stream;// = new Stream(  'audio/polar.mp3',audioController  );
+  var stream = new Stream(  'love.mp3',audioController  );
   
 
-  var userAudio = new UserAudio( audioController );
-
-  userAudio.onStreamCreated = function(){
-
-    onLoad();
-
-  }
-
-  //var userMedia = new UserMedia
-  var lT = THREE.ImageUtils.loadTexture;
-  var m = THREE.UVMapping;
-  var c = function(){ onLoad() };
-
-  var waterNormal = lT( '../../img/normals/water.png' , m , c );
-  waterNormal.wrapS = THREE.RepeatWrapping; 
-  waterNormal.wrapT = THREE.RepeatWrapping;
-
-
   //var controller = new Leap.Controller();
-
-  var loader  = new THREE.OBJLoader();
-  loader.load( '../../models/logo1.obj' , function( obj ){
-
-    console.log( obj );
-
-    handGeo = obj.children[0].geometry;
-    //handGeo.computeFaceNormals();
-    //handGeo.computeVertexNormals();
-    onLoad();
-
-  });
- 
 
   var timer = { type:"f" , value:0 }
   var dT = { type:"f" , value:0 }
@@ -201,7 +184,7 @@
     );
 
     // placing our camera position so it can see everything
-    camera.position.z = 20 ;
+    camera.position.z = 30 ;
     camera.lookAt( new THREE.Vector3() );
 
 
@@ -227,10 +210,11 @@
 
 
     // Setting up our Renderer
-    renderer = new THREE.WebGLRenderer({ autoclear:false });
+    renderer = new THREE.WebGLRenderer({ alpha: true });
 
     renderer.setSize( window.innerWidth, window.innerHeight );
     container.appendChild( renderer.domElement );
+    renderer.domElement.style.background="#000";
 
 
     // Making sure our renderer is always the right size
@@ -250,6 +234,7 @@
 
       repelers:{ type:"v3v" , value:[]},
       velocities:{ type:"v3v" , value:[]},
+      aPower:{ type:"v3v" , value:[] }
 
     }
 
@@ -260,25 +245,28 @@
 
       var mesh = new THREE.Mesh( g , m );
 
-      mesh.position.x = ( Math.random() - .5 ) * 10;
-      mesh.position.y = ( Math.random() - .5 ) * 10;
-      mesh.position.z = ( Math.random() - .5 ) * 10;
+      var t = 2 * ( i / 25 ) * Math.PI;
+      var p = Math.random()  * 2 *   Math.PI;
+
+      mesh.position.copy( toCart( 12 , t , p ) );
 
       mesh.velocity = new THREE.Vector3();
 
-      //scene.add( mesh );
+     // scene.add( mesh );
       u.repelers.value.push( mesh.position );
       u.velocities.value.push( mesh.velocity );
+      u.aPower.value.push( new THREE.Vector3() );
 
     }
 
-    var geo = new THREE.IcosahedronGeometry( 2 , 6 );
-    //var geo = new THREE.CubeGeometry( 10 , 10 , 10 , 50 , 50 , 50 );
+    var geo = new THREE.IcosahedronGeometry( 9 , 7 );
+   // var geo = new THREE.CubeGeometry( 1 , 10 , 10 , 50 , 50 , 50 );
     //var geo = handGeo;
     var ss = shaders.simulationShaders.ball;
     var vs = shaders.vertexShaders.ball;
     var fs = shaders.fragmentShaders.ball;
     ball = new Face( geo , ss , vs , fs , u);
+
 
     /*var wf = new THREE.Mesh( geo , new THREE.MeshBasicMaterial({
       wireframe: true,
@@ -326,9 +314,7 @@
         tv1.normalize();
 
         v1.add( tv1.multiplyScalar( (l - 10)* ( 1.1 + Math.cos(timer.value) )/ 10000 ) );
-      
-
-      
+  
 
       }
 
@@ -340,8 +326,16 @@
        var v1 = u.velocities.value[i];
 
 
+       var ind = i / (2 * u.repelers.value.length); 
+       var fI = Math.floor( ind * audioController.analyzer.array.length );
+       var p = audioController.analyzer.array[ fI ];
+
+       u.aPower.value[i].x = p / 256;
+      
+
+
        
-       r1.add( v1 );
+       //r1.add( v1 );
 
       // v1.multiplyScalar( .95 + .05 * Math.sin( timer.value ) );
 
@@ -415,6 +409,7 @@
       init();
       animate();
       
+   
       if( stream ){
       
         stream.play();
@@ -422,6 +417,15 @@
       }
 
     }
+
+  }
+
+  function toCart( r , t , p ){
+
+    var x = r *(Math.sin(t))*(Math.cos(p));
+    var y = r *(Math.sin(t))*(Math.sin(p));
+    var z = r * (Math.cos(t));
+    return new THREE.Vector3(x,y,z);
 
   }
 
