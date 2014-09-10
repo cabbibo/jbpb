@@ -38,14 +38,14 @@ void main(){
     float rL = length( rD );
     vec3  rN = normalize( rD );
 
-    if( rL < 5. ){
+    //if( rL < 5. ){
 
-      f += rN;
+      f += 1.1 *  rN / rL;
 
         //f -= rN;
 
 
-    }
+   // }
 
 
   }
@@ -54,7 +54,7 @@ void main(){
   f -= dif;
  
   vel += f*dT;
-  vel *= .98;
+  vel *= .95;
   p += vel * 1.;//speed;*/
 
 

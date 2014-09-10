@@ -90,6 +90,7 @@
 <script src = "../../lib/ObjectControls.js"       ></script>
 <script src = "../../lib/PhysicsRenderer.js"      ></script>
 <script src = "../../lib/ParticleUtils.js"        ></script>
+<script src = "../../lib/OBJLoader.js"                 ></script>
 <script src = "../../lib/leap.js"                 ></script>
 <script src = "../../Face.js"                ></script>
 
@@ -101,9 +102,11 @@
 
   var container , camera, scene, renderer , stats;
 
-  var sceneSize = 10;
+  var sceneSize = 5;
 
 
+  var tv1 = new THREE.Vector3();
+  var tv2 = new THREE.Vector3();
   var treeArray = [];
   var handGeo;
   var skullGeo;
@@ -118,7 +121,7 @@
 
 
   var loaded = 0;
-  var neededToLoad = 1;
+  var neededToLoad = 4;
 
   var waterRender = { type:"f" ,value:0}
 
@@ -136,27 +139,37 @@
   var stream;// = new Stream(  'audio/polar.mp3',audioController  );
   
 
-  /*var userAudio = new UserAudio( audioController );
+  var userAudio = new UserAudio( audioController );
 
   userAudio.onStreamCreated = function(){
 
     onLoad();
 
-  }*/
+  }
 
   //var userMedia = new UserMedia
- /* var lT = THREE.ImageUtils.loadTexture;
+  var lT = THREE.ImageUtils.loadTexture;
   var m = THREE.UVMapping;
   var c = function(){ onLoad() };
 
-  var waterNormal = lT( 'img/normals/water.png' , m , c );
+  var waterNormal = lT( '../../img/normals/water.png' , m , c );
   waterNormal.wrapS = THREE.RepeatWrapping; 
   waterNormal.wrapT = THREE.RepeatWrapping;
 
 
-  var controller = new Leap.Controller();*/
+  //var controller = new Leap.Controller();
 
-  // FRIEND TEXTURES
+  var loader  = new THREE.OBJLoader();
+  loader.load( '../../models/logo1.obj' , function( obj ){
+
+    console.log( obj );
+
+    handGeo = obj.children[0].geometry;
+    //handGeo.computeFaceNormals();
+    //handGeo.computeVertexNormals();
+    onLoad();
+
+  });
  
 
   var timer = { type:"f" , value:0 }
@@ -188,7 +201,7 @@
     );
 
     // placing our camera position so it can see everything
-    camera.position.z = 50 ;
+    camera.position.z = 20 ;
     camera.lookAt( new THREE.Vector3() );
 
 
@@ -233,29 +246,35 @@
     var h = window.innerHeight;
   
 
-    var u = {
+    u = {
 
       repelers:{ type:"v3v" , value:[]},
+      velocities:{ type:"v3v" , value:[]},
 
     }
 
-    var g = new THREE.IcosahedronGeometry( 1 , 1 );
+    var g = new THREE.IcosahedronGeometry( .1 , 1 );
     var m = new THREE.MeshNormalMaterial();
 
     for( var i =0; i<25; i++ ){
 
       var mesh = new THREE.Mesh( g , m );
 
-      mesh.position.x = ( Math.random() - .5 ) * 20;
-      mesh.position.y = ( Math.random() - .5 ) * 20;
-      mesh.position.z = ( Math.random() - .5 ) * 20;
+      mesh.position.x = ( Math.random() - .5 ) * 10;
+      mesh.position.y = ( Math.random() - .5 ) * 10;
+      mesh.position.z = ( Math.random() - .5 ) * 10;
 
-      scene.add( mesh );
+      mesh.velocity = new THREE.Vector3();
+
+      //scene.add( mesh );
       u.repelers.value.push( mesh.position );
+      u.velocities.value.push( mesh.velocity );
 
     }
 
-    var geo = new THREE.IcosahedronGeometry( 10 , 5 );
+    var geo = new THREE.IcosahedronGeometry( 2 , 6 );
+    //var geo = new THREE.CubeGeometry( 10 , 10 , 10 , 50 , 50 , 50 );
+    //var geo = handGeo;
     var ss = shaders.simulationShaders.ball;
     var vs = shaders.vertexShaders.ball;
     var fs = shaders.fragmentShaders.ball;
@@ -285,7 +304,48 @@
     controls.update();
 
     //updateCamera();
-    
+
+    for( var i = 0; i < u.repelers.value.length; i++ ){
+
+      var r1 = u.repelers.value[i];
+      var v1 = u.velocities.value[i];
+
+      tv1.copy( r1 );
+
+      v1.add( tv1.multiplyScalar( -.001 * ( 1.1 + Math.sin(timer.value) ) ) );
+
+
+      for( var j = 0; j < u.repelers.value.length; j++ ){
+
+        var r2 = u.repelers.value[j];
+
+        tv1.copy( r2 );
+        tv1.sub( r1  );
+        var l = tv1.length();
+
+        tv1.normalize();
+
+        v1.add( tv1.multiplyScalar( (l - 10)* ( 1.1 + Math.cos(timer.value) )/ 10000 ) );
+      
+
+      
+
+      }
+
+    }
+   
+    for( var i = 0; i < u.repelers.value.length; i++ ){
+       
+       var r1 = u.repelers.value[i];
+       var v1 = u.velocities.value[i];
+
+
+       
+       r1.add( v1 );
+
+      // v1.multiplyScalar( .95 + .05 * Math.sin( timer.value ) );
+
+    }
 
     var t = timer.value;
 
@@ -337,8 +397,8 @@
    
     var dpr = devicePixelRatio || 1;
 
-    camUniforms.SS.value.x = window.innerWidth * dpr;
-    camUniforms.SS.value.y = window.innerHeight * dpr;
+    //camUniforms.SS.value.x = window.innerWidth * dpr;
+    //camUniforms.SS.value.y = window.innerHeight * dpr;
 
 
   }

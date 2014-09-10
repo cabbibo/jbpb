@@ -9,12 +9,18 @@ uniform sampler2D t_og;
 varying vec2 vUv;
 varying vec3 vVel;
 
+varying vec3 vPos;
 varying vec3 vMPos;
+
+varying vec3 vLightDir;
 
 varying float vLife;
 varying vec4 vAudio;
 
 varying vec3 vNorm;
+
+varying vec3 vCamPos;
+varying vec3 vMNorm;
 
 void main(){
 
@@ -25,7 +31,6 @@ void main(){
   vec4 v2 = texture2D( t_pos , tri2.xy );
   vec4 oPos = texture2D( t_oPos , vUv );
   vec4 ogPos = texture2D( t_og , vUv );
-
 
   vVel = pos.xyz - oPos.xyz;
 
@@ -40,9 +45,11 @@ void main(){
   //vNorm = normalize( vec3( tri1.x , tri1.y , 0. ) );
 
   vMPos = ( modelMatrix * vec4( pos.xyz , 1. ) ).xyz;
+  vMNorm = ( modelMatrix * vec4( vNorm.xyz , 0. ) ).xyz;
 
   vAudio = texture2D( t_audio , vec2( vUv.x , 0. ) );
-  gl_Position = projectionMatrix * modelViewMatrix * vec4( position.x , position.y , 0. , 1. );
+
+  vPos = pos.xyz;
   gl_Position = projectionMatrix * modelViewMatrix * vec4( pos.xyz , 1. );
 
 

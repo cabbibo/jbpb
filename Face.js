@@ -30,6 +30,7 @@ function Face( geometry , ss , vs , fs , u ){
     t_pos:{ type:"t" , value:null },
     t_oPos:{ type:"t" , value:null },
     t_audio:t_audio,
+    t_normal:{type:"t" ,value: waterNormal },
     t_og:this.t_og
 
   }
