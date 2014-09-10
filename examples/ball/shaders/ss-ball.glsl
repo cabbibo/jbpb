@@ -24,11 +24,11 @@ void main(){
   float life = pos.w;
   
   vec3 f = vec3( 0. , 0. , 0. );
-  life += dT * (abs(sin( vUv.x * 1000. * cos( vUv.y * 500. )))+.3) ;
+  life -= dT * 1.3; //* .1;//dT * (abs(sin( vUv.x * 1000. * cos( vUv.y * 500. )))+.3) ;
 
   f += vec3( 0. , .5 , 0. );
  
-  vec3 curl = curlNoise( pos.xyz * .02 );
+  vec3 curl = curlNoise( pos.xyz * .01 );
   f+= curl* .5;
 
   vel += f;
@@ -41,18 +41,19 @@ void main(){
   }
 
 
-  if( life > 10. ){
+  if( life < 0. ){
 
      p = texture2D( t_og , vUv ).xyz;
      vel *= 0.;
      
-     life = 0.;
+     life = 2.;
 
   }
 
-  if( life == 0. ){
+  if( life == 2. ){
 
     vel *= 0.;
+    life == 1.;
 
   }
 
