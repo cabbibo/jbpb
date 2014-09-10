@@ -138,11 +138,11 @@
   guiRender = gui.addFolder( 'Render' );
 
 
-  guiSim.add( PARAMS.simulation.repulsionPower , 'value' ).name( 'Repulsion Power' );
-  guiSim.add( PARAMS.simulation.repulsionRadius , 'value' ).name( 'Repulsion Radius' );
-  guiSim.add( PARAMS.simulation.dampening , 'value' ).name( 'Dampenening' );
+  guiSim.add( PARAMS.simulation.repulsionPower , 'value' , -10 , 100).name( 'Repulsion Power' );
+  guiSim.add( PARAMS.simulation.repulsionRadius , 'value' , 10 , 1000).name( 'Repulsion Radius' );
+  guiSim.add( PARAMS.simulation.dampening , 'value' , .8 , .999 ).name( 'Dampenening' );
 
-  guiRender.add( PARAMS.render.audioDisplacement , 'value' ).name( 'Audio Displacement' );
+  guiRender.add( PARAMS.render.audioDisplacement , 'value' , -3 , 3).name( 'Audio Displacement' );
 
   var tv1 = new THREE.Vector3();
   var tv2 = new THREE.Vector3();
