@@ -6,6 +6,8 @@ uniform sampler2D t_oPos;
 uniform sampler2D t_audio;
 uniform sampler2D t_og;
 
+uniform float audioDisplacement;
+
 varying vec2 vUv;
 varying vec3 vVel;
 
@@ -48,9 +50,9 @@ void main(){
   vMPos = ( modelMatrix * vec4( pos.xyz , 1. ) ).xyz;
   vMNorm = ( modelMatrix * vec4( vNorm.xyz , 0. ) ).xyz;
 
-  vAudio = texture2D( t_audio , vec2( vUv.x , 0. ) );
+  vAudio = texture2D( t_audio , vec2( abs(vNorm.x) , 0. ) );
 
-  pos.xyz += vNorm * length(vAudio )* .0;//01;
+  pos.xyz += vNorm * length(vAudio )* audioDisplacement;//01;
   vPos = pos.xyz;
   vLightDir = normalize( vMPos - vec3( 1000. , 0. , 0. ) );
 

@@ -9,6 +9,10 @@ uniform vec3 repelers[ 25 ];
 uniform vec3 velocities[ 25 ];
 uniform vec3 aPower[ 25 ];
 
+uniform float repulsionPower;
+uniform float repulsionRadius;
+uniform float dampening;
+
 varying vec2 vUv;
 
 
@@ -42,9 +46,9 @@ void main(){
     vec3  rN = normalize( rD );
 
     float p = aPower[i].x;
-    if( rL < p * p * p * 600.4 ){
+    if( rL < p * p * p * repulsionRadius ){
 
-      f +=  10.  * p * rN / (rL);
+      f +=  repulsionPower  * p * rN / (rL);
 
         //f -= rN;
 
@@ -58,7 +62,7 @@ void main(){
   f -= dif;
  
   vel += f*dT;
-  vel *= .95;
+  vel *= dampening;
   p += vel * 1.;//speed;*/
 
 

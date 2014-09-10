@@ -18,10 +18,9 @@ function Face( geometry , ss , vs , fs , u ){
   this.physics.setUniform( 'timer' , timer );
   this.physics.setUniform( 't_og' , this.t_og );
   
-  for( var propt in this.u ){
+  for( var propt in this.u.simulation ){
 
-    this.physics.setUniform( propt , this.u[propt] );
-   // console.log( propt );
+    this.physics.setUniform( propt , this.u.simulation[propt] );
 
   }
 
@@ -34,6 +33,14 @@ function Face( geometry , ss , vs , fs , u ){
     t_og:this.t_og
 
   }
+
+  for( var propt in this.u.render ){
+
+    this.uniforms[ propt ] = this.u.render[propt];
+
+  }
+
+
 
   this.attributes = {
 
@@ -50,8 +57,8 @@ function Face( geometry , ss , vs , fs , u ){
     vertexShader: this.vs, 
     fragmentShader: this.fs,
     transparent: true,
-    //blending: THREE.AdditiveBlending,
-   // depthWrite: false
+   // blending: THREE.AdditiveBlending,
+   // depthWrite: false,
     side: THREE.DoubleSide
   });
   

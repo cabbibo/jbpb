@@ -61,12 +61,21 @@
 
     }
 
-    #description
+     #GUI{
 
-  </style>
+      position:fixed;
+      right:0px;
+      top:0px;
+      z-index:999;
+
+      }
+    
+    </style>
 </head>
 <body>
 
+  <div id="GUI"></div>
+  
    <div id="description">
 
      <a href="https://soundcloud.com/gidgeofficial/gidge-i-fell-in-love" target="_blank">
@@ -89,9 +98,10 @@
 <script src = "../../lib/ObjectControls.js"       ></script>
 <script src = "../../lib/PhysicsRenderer.js"      ></script>
 <script src = "../../lib/ParticleUtils.js"        ></script>
-<script src = "../../lib/OBJLoader.js"                 ></script>
+<script src = "../../lib/OBJLoader.js"            ></script>
 <script src = "../../lib/leap.js"                 ></script>
-<script src = "../../Face.js"                ></script>
+<script src = "../../lib/dat.gui.min.js"          ></script>
+<script src = "../../Face.js"                     ></script>
 
 
 
@@ -106,18 +116,33 @@
   var PARAMS = {
 
     simulation:{
-      repulsionPower:{ type:"f" , value: 0 },
+      repulsionPower:   { type:"f" , value: 10 },
+      repulsionRadius:  { type:"f" , value: 600 },
+      dampening:        { type:"f" , value: .95 },
+      
     },
     render:{
-
-      audioDisplace:{ type:"f" , value : 0 },
-      normalScale:{ type:"f" , value : 0 },
-      textureScale:{ type:"f" , value : 0 }
-
+      audioDisplacement:{ type:"f" , value : 0 },
     }
 
   }
 
+  var gui = new dat.GUI({autoPlace:false});
+
+  gui.close();
+
+  var guiContainer = document.getElementById('GUI');
+  guiContainer.appendChild(gui.domElement);
+
+  guiSim    = gui.addFolder( 'Simulation' );
+  guiRender = gui.addFolder( 'Render' );
+
+
+  guiSim.add( PARAMS.simulation.repulsionPower , 'value' ).name( 'Repulsion Power' );
+  guiSim.add( PARAMS.simulation.repulsionRadius , 'value' ).name( 'Repulsion Radius' );
+  guiSim.add( PARAMS.simulation.dampening , 'value' ).name( 'Dampenening' );
+
+  guiRender.add( PARAMS.render.audioDisplacement , 'value' ).name( 'Audio Displacement' );
 
   var tv1 = new THREE.Vector3();
   var tv2 = new THREE.Vector3();
@@ -191,7 +216,6 @@
     camera.theta = 0;
     camera.rotationSpeed = 0;
 
-    controls = new THREE.TrackballControls( camera );
 
     //controls.noPan = true;
     //controls.noRoll = true;
@@ -215,6 +239,8 @@
     renderer.setSize( window.innerWidth, window.innerHeight );
     container.appendChild( renderer.domElement );
     renderer.domElement.style.background="#000";
+    
+    controls = new THREE.TrackballControls( camera , renderer.domElement);
 
 
     // Making sure our renderer is always the right size
@@ -232,9 +258,18 @@
 
     u = {
 
-      repelers:{ type:"v3v" , value:[]},
-      velocities:{ type:"v3v" , value:[]},
-      aPower:{ type:"v3v" , value:[] }
+      simulation:{
+        repelers:{ type:"v3v" , value:[]},
+        velocities:{ type:"v3v" , value:[]},
+        aPower:{ type:"v3v" , value:[] },
+        repulsionPower: PARAMS.simulation.repulsionPower,
+        dampening: PARAMS.simulation.dampening,
+        repulsionRadius: PARAMS.simulation.repulsionRadius,
+      },
+      render:{
+        audioDisplacement: PARAMS.render.audioDisplacement
+
+      }
 
     }
 
@@ -253,9 +288,9 @@
       mesh.velocity = new THREE.Vector3();
 
      // scene.add( mesh );
-      u.repelers.value.push( mesh.position );
-      u.velocities.value.push( mesh.velocity );
-      u.aPower.value.push( new THREE.Vector3() );
+      u.simulation.repelers.value.push( mesh.position );
+      u.simulation.velocities.value.push( mesh.velocity );
+      u.simulation.aPower.value.push( new THREE.Vector3() );
 
     }
 
@@ -293,7 +328,7 @@
 
     //updateCamera();
 
-    for( var i = 0; i < u.repelers.value.length; i++ ){
+    /*for( var i = 0; i < u.repelers.value.length; i++ ){
 
       var r1 = u.repelers.value[i];
       var v1 = u.velocities.value[i];
@@ -318,19 +353,19 @@
 
       }
 
-    }
+    }*/
    
-    for( var i = 0; i < u.repelers.value.length; i++ ){
+    for( var i = 0; i < u.simulation.repelers.value.length; i++ ){
        
-       var r1 = u.repelers.value[i];
-       var v1 = u.velocities.value[i];
+       /*var r1 = u.repelers.value[i];
+       var v1 = u.velocities.value[i];*/
 
 
-       var ind = i / (2 * u.repelers.value.length); 
+       var ind = i / (2 * u.simulation.repelers.value.length); 
        var fI = Math.floor( ind * audioController.analyzer.array.length );
        var p = audioController.analyzer.array[ fI ];
 
-       u.aPower.value[i].x = p / 256;
+       u.simulation.aPower.value[i].x = p / 256;
       
 
 
