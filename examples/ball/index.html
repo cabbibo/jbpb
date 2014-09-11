@@ -103,7 +103,9 @@
 <script src = "../../lib/dat.gui.min.js"          ></script>
 <script src = "../../Face.js"                     ></script>
 
-
+<script src="../../fonts/helvetiker_bold.typeface.js"></script>
+<script src="../../fonts/helvetiker_regular.typeface.js"></script>
+<script src="../../Text.js"></script>
 
 <script>
 
@@ -111,7 +113,10 @@
 
   var container , camera, scene, renderer , stats;
 
+  
   var sceneSize = 5;
+
+  var ball;
 
   var PARAMS = {
 
@@ -123,6 +128,21 @@
     },
     render:{
       audioDisplacement:{ type:"f" , value : 0 },
+      lambTemp: { r:0 , b:0 , g:0 },
+      specTemp: { r:0 , b:0 , g:0 },
+      audioTemp: { r:0 , b:0 , g:0 },
+      c_lamb:{ type:"c" , value : new THREE.Color( 0xff0000 ) },
+      c_spec:{ type:"c" , value : new THREE.Color( 0x00ff00) },
+      c_audio:{ type:"c" , value : new THREE.Color( 0x0000ff ) },
+    },
+    
+
+    objectType:"ring",
+    visualType:"plastic",
+    toggle:function(){
+
+      toggleRepelers();
+
     }
 
   }
@@ -142,15 +162,70 @@
   guiSim.add( PARAMS.simulation.repulsionRadius , 'value' , 10 , 1000).name( 'Repulsion Radius' );
   guiSim.add( PARAMS.simulation.dampening , 'value' , .8 , .999 ).name( 'Dampenening' );
 
-  guiRender.add( PARAMS.render.audioDisplacement , 'value' , -3 , 3).name( 'Audio Displacement' );
+  guiSim.add( PARAMS , 'toggle').name( 'toggleRepelers' );
 
+
+
+  guiRender.add( PARAMS.render.audioDisplacement , 'value' , -3 , 3).name( 'Audio Displacement' );
+  guiRender.addColor( PARAMS.render , 'lambTemp' ).name( 'Lambert' ).onChange( function( value ){
+
+    PARAMS.render.c_lamb.value.r =value.r / 256;
+    PARAMS.render.c_lamb.value.g =value.g / 256;
+    PARAMS.render.c_lamb.value.b =value.b / 256;
+    
+  });
+
+  guiRender.addColor( PARAMS.render , 'specTemp' ).name( 'Specular' ).onChange( function( value ){
+
+    PARAMS.render.c_spec.value.r =value.r / 256;
+    PARAMS.render.c_spec.value.g =value.g / 256;
+    PARAMS.render.c_spec.value.b =value.b / 256;
+    
+  });
+
+   guiRender.addColor( PARAMS.render , 'audioTemp' ).name( 'Fresnel?' ).onChange( function( value ){
+
+    PARAMS.render.c_audio.value.r =value.r / 256;
+    PARAMS.render.c_audio.value.g =value.g / 256;
+    PARAMS.render.c_audio.value.b =value.b / 256;
+    
+  });
+
+
+
+  guiSim.add( PARAMS, 'objectType' , ['cube','sphere' , 'hand' , 'skull' , 'logo' ,'bieb' ,'rickAndBarney', 'ring', 'torus' ] ).onChange( function(value){
+
+    recreateGeometry(value);
+    console.log(value);
+
+  });
+
+
+  guiRender.add( PARAMS,'visualType' , [  'plastic' , 'wireframe' ]).onChange(function(value){
+
+    recreateMaterial( value );
+
+  });
+
+  var geometries = {
+
+    ring:new THREE.RingGeometry( 1, 12, 60 , 60 , 60), 
+    torus:new THREE.TorusGeometry( 10, 3, 50, 400 ), 
+    sphere:new THREE.IcosahedronGeometry( 9 , 7 ), 
+    cube:new THREE.BoxGeometry( 12 , 12 , 12 , 70 , 70 , 70 ),
+    rickAndBarney: new Text( 'cabbibo' ).geo
+
+  }
+
+  var materials = {
+
+
+
+  }
   var tv1 = new THREE.Vector3();
   var tv2 = new THREE.Vector3();
-  var treeArray = [];
-  var handGeo;
-  var skullGeo;
-  var tendrilGeo;
-  var logoGeo;
+  var repelerMeshes = [];
+  var repelersHidden = true;
 
   var mouse = new THREE.Vector2();
   var oMouse = mouse.clone();
@@ -160,14 +235,14 @@
 
 
   var loaded = 0;
-  var neededToLoad = 1;
+  var neededToLoad = 6;
 
   var waterRender = { type:"f" ,value:0}
 
   var clock = new THREE.Clock();
 
   var audioController = new AudioController();
-  audioController.mute.gain.value = 1;
+  audioController.mute.gain.value = 0;
 
   var controller = new Leap.Controller();
   controller.connect();
@@ -178,6 +253,13 @@
   var stream = new Stream(  'love.mp3',audioController  );
   
 
+  var userAudio = new UserAudio( audioController );
+
+  userAudio.onStreamCreated = function(){
+
+    onLoad();
+
+  }
   //var controller = new Leap.Controller();
 
   var timer = { type:"f" , value:0 }
@@ -187,16 +269,68 @@
 
   var shaders = new ShaderLoader('shaders');
 
+  shaders.load( 'ss-ball' , 'ball' , 'simulation' );
+  
   shaders.load( 'vs-ball' , 'ball' , 'vertex' );
   shaders.load( 'fs-ball' , 'ball' , 'fragment' );
-  shaders.load( 'ss-ball' , 'ball' , 'simulation' );
+  
+  shaders.load( 'vs-wireframe' , 'wireframe' , 'vertex' );
+  shaders.load( 'fs-wireframe' , 'wireframe' , 'fragment' );
+  
 
   shaders.shaderSetLoaded = function(){
    onLoad();
-  }
+ }
+
+
+
+  var loader  = new THREE.OBJLoader();
+  loader.load( 'models/hand.obj' , function( obj ){
+
+    geometries['hand'] = obj.children[0].geometry;
+    onLoad();
+
+  });
+
+    var loader  = new THREE.OBJLoader();
+  loader.load( 'models/skull.obj' , function( obj ){
+
+    geometries['skull'] = obj.children[0].geometry;
+    onLoad();
+
+  });
+
+    var loader  = new THREE.OBJLoader();
+  loader.load( 'models/logo.obj' , function( obj ){
+
+    geometries['logo'] = obj.children[0].geometry;
+    onLoad();
+
+  });
+
+     var loader  = new THREE.OBJLoader();
+  loader.load( 'models/bieb.obj' , function( obj ){
+
+    geometries['bieb'] = obj.children[0].geometry;
+    onLoad();
+
+  });
+
+
 
 
   function init(){
+
+    materials.plastic = { 
+      vs: shaders.vertexShaders.ball,
+      fs: shaders.fragmentShaders.ball
+    }
+
+     materials.wireframe = { 
+      vs: shaders.vertexShaders.wireframe,
+      fs: shaders.fragmentShaders.wireframe
+    }
+
 
 
     scene = new THREE.Scene();
@@ -267,7 +401,10 @@
         repulsionRadius: PARAMS.simulation.repulsionRadius,
       },
       render:{
-        audioDisplacement: PARAMS.render.audioDisplacement
+        audioDisplacement: PARAMS.render.audioDisplacement,
+        c_spec: PARAMS.render.c_spec,
+        c_lamb: PARAMS.render.c_lamb,
+        c_audio: PARAMS.render.c_audio,
 
       }
 
@@ -292,24 +429,16 @@
       u.simulation.velocities.value.push( mesh.velocity );
       u.simulation.aPower.value.push( new THREE.Vector3() );
 
+      repelerMeshes.push( mesh );
+
     }
 
-    var geo = new THREE.IcosahedronGeometry( 9 , 7 );
-   // var geo = new THREE.CubeGeometry( 1 , 10 , 10 , 50 , 50 , 50 );
-    //var geo = handGeo;
-    var ss = shaders.simulationShaders.ball;
-    var vs = shaders.vertexShaders.ball;
-    var fs = shaders.fragmentShaders.ball;
-    ball = new Face( geo , ss , vs , fs , u);
+    recreateGeometry(PARAMS.objectType);
+   // recreateMaterial('wireframe');
 
 
-    /*var wf = new THREE.Mesh( geo , new THREE.MeshBasicMaterial({
-      wireframe: true,
-      color:0xff0000
-    }));
 
-    scene.add( wf );*/
-  }
+    }
 
 
   function animate(){
@@ -326,34 +455,7 @@
 
     controls.update();
 
-    //updateCamera();
 
-    /*for( var i = 0; i < u.repelers.value.length; i++ ){
-
-      var r1 = u.repelers.value[i];
-      var v1 = u.velocities.value[i];
-
-      tv1.copy( r1 );
-
-      v1.add( tv1.multiplyScalar( -.001 * ( 1.1 + Math.sin(timer.value) ) ) );
-
-
-      for( var j = 0; j < u.repelers.value.length; j++ ){
-
-        var r2 = u.repelers.value[j];
-
-        tv1.copy( r2 );
-        tv1.sub( r1  );
-        var l = tv1.length();
-
-        tv1.normalize();
-
-        v1.add( tv1.multiplyScalar( (l - 10)* ( 1.1 + Math.cos(timer.value) )/ 10000 ) );
-  
-
-      }
-
-    }*/
    
     for( var i = 0; i < u.simulation.repelers.value.length; i++ ){
        
@@ -400,6 +502,98 @@
     
   }
 
+  function recreateGeometry( type ){
+
+    if( ball ){
+
+      ball.removeFromScene();
+
+      var vs = ball.vs;
+      var fs = ball.fs;
+      var ss = ball.ss;
+      
+      ball = new Face( geometries[type] , ss , vs , fs , u );
+      ball.addToScene();
+
+    }else{
+
+      var ss = shaders.simulationShaders.ball;
+      var vs = shaders.vertexShaders.ball;
+      var fs = shaders.fragmentShaders.ball;
+      ball = new Face( geometries[type] , ss , vs , fs , u );
+      ball.addToScene();
+
+
+
+    }
+
+  }
+
+
+  function recreateMaterial( type ){
+
+    if( ball ){
+
+      ball.removeFromScene();
+
+      var geo = ball.ogGeometry;
+      var ss = ball.ss;
+
+      var fs = materials[type].fs;
+      var vs = materials[type].vs;
+      
+      ball = new Face( geo , ss , vs , fs , u );
+      ball.addToScene();
+
+    }else{
+
+      var ss = shaders.simulationShaders.ball;
+     
+      var fs = materials[type].fs;
+      var vs = materials[type].vs;
+      
+      ball = new Face( geometries['sphere'] , ss , vs , fs , u );
+
+      ball.addToScene();
+
+
+
+    }
+
+  }
+
+  function toggleRepelers(){
+
+    if( repelersHidden === true ){
+      for( var i = 0; i < repelerMeshes.length; i++ ){
+
+        scene.add( repelerMeshes[i] );
+
+      }
+    }else{
+
+      for( var i = 0; i < repelerMeshes.length; i++ ){
+
+        scene.remove( repelerMeshes[i] );
+
+      }
+
+
+    }
+
+    repelersHidden = !repelersHidden;
+
+  }
+
+   function hideRepelers(){
+
+    for( var i = 0; i < repelerMeshes.length; i++ ){
+
+      scene.add( repelerMeshes[i] );
+
+    }
+
+  }
   function onMouseMove(e ){
 
     oMouse.copy( mouse );
@@ -447,7 +641,7 @@
    
       if( stream ){
       
-        stream.play();
+        //stream.play();
 
       }
 

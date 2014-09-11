@@ -67,7 +67,19 @@ function Face( geometry , ss , vs , fs , u ){
   this.three = new THREE.Mesh( this.geometry , this.material );
 
  // this.three = new THREE.Mesh( this.ogGeometry );
+ // scene.add( this.three );
+
+}
+
+Face.prototype.addToScene = function(){
+
   scene.add( this.three );
+
+}
+
+Face.prototype.removeFromScene = function(){
+
+  scene.remove( this.three );
 
 }
 

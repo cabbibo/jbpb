@@ -2,8 +2,8 @@ function Text( text , mat ){
 
   //var text = "#weirdkids",
 
-    height = 20,
-    size = 300,
+    height = 1,
+    size = 3,
     hover = 30,
 
     curveSegments = 4,
@@ -18,38 +18,58 @@ function Text( text , mat ){
     style = "normal"; // normal italic
 
 
-  var geo = new THREE.TextGeometry( text, {
+    var cubeG = new THREE.BoxGeometry( 1 ,1 ,1 )
+    var geometry = new THREE.Geometry();
+  
+    
+    var geo = new THREE.TextGeometry( text, {
 
-    size: size,
-    height: height,
-    curveSegments: curveSegments,
+        size: size,
+        height: height,
+        curveSegments: curveSegments,
 
-    font: font,
-    weight: weight,
-    style: style,
+        font: font,
+        weight: weight,
+        style: style,
 
-    bevelThickness: bevelThickness,
-    bevelSize:  bevelSize,
-    bevelEnabled: bevelEnabled,
+        bevelThickness: bevelThickness,
+        bevelSize:  bevelSize,
+        bevelEnabled: bevelEnabled,
 
-    material: 0,
-    extrudeMaterial: 1
+        material: 0,
+        extrudeMaterial: 1
 
-  });
+      });
 
-  geo.computeBoundingBox();
-  geo.computeFaceNormals();
+    for( var i = 0; i < 10; i++ ){
+      
+       
+      var m = new THREE.Mesh( cubeG );
+      m.rotation.z = (i / 10 ) * 2 * Math.PI;
+      var t = - m.rotation.z + Math.PI / 2
+      m.position.x += 1 * Math.sin(t);
+      m.position.y += 1 * Math.cos(t);
+
+      m.updateMatrix();
+
+      geometry.merge( geo , m.matrix );
+
+    }
+
  // geo.computeVertexNormals();
 
-  var mesh = new THREE.Mesh( geo ,/* new THREE.MeshBasicMaterial({
+  this.geo = geometry;
+  this.mat = mat;
+
+ /* var mesh = new THREE.Mesh( geo ,/* new THREE.MeshBasicMaterial({
   
     color:0xffffff,
     map: t_audio.value
    // wireframe:true
     
-  }) */ mat);
+  })  mat);
 
-  this.mesh = mesh;
+  this.mesh = mesh;*/
   //scene.add( mesh );
 
 

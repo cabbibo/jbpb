@@ -40,14 +40,15 @@ void main(){
   float iFR = 1. - fr;
 
   vec3 a = texture2D( t_audio , vec2( abs(sin(dot( reflect( vLightDir , vMNorm  )  , vCamVec ))) , 0. ) ).xyz *iFR;
-  vec4 aC = texture2D( t_audio , vec2( abs(sin(dot( -vLightDir , vMNorm ))) , 0. )  );
+  vec4 a1 = texture2D( t_audio , vec2( abs(sin(dot( -vLightDir , vMNorm ))) , 0. )  );
 
   vec3 rC = c_spec * pow( refl , 30. );
   vec3 lC = c_lamb * pow( lamb , 1. );
+  vec3 aC = c_audio * a  * a1.xyz;
 
   //gl_FragColor = vec4( vUv.x, vLife /10000., vUv.y, 1. ); //aC ; //* vec4(  1000. - vMPos.y , 100. / vMPos.y , .3, 1. );
  // gl_FragColor = vec4( vec3( .5 , .4 , .2 ) + vec3( 1. , 1. , .6 ) * aC.xyz * aC1.xyz , 1. ); //aC ; //* vec4(  1000. - vMPos.y , 100. / vMPos.y , .3, 1. );
-  gl_FragColor = vec4(  (rC + lC ) + c_audio * a  * aC.xyz, 1. );
+  gl_FragColor = vec4( aC * iFR * iFR * iFR * 10. , 1. );
 
 
 
